@@ -1,28 +1,45 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react';
+import { CanvasRoot, View, Text } from './primitives';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+let view1 = {
+  flex: 1,
+  padding: 50,
+  flexDirection: 'row',
+  backgroundColor: 'mediumspringgreen',
+};
+
+let view3 = {
+  flex: 1,
+  backgroundColor: 'rebeccapurple',
+};
+
+export default function App() {
+  let [color, toggleColor] = useState('tomato');
+  useEffect(() => {
+    let int = setInterval(() => {
+      toggleColor(color => (color === 'tomato' ? 'purple' : 'tomato'));
+    }, 500);
+
+    return () => {
+      clearInterval(int);
+    };
+  }, []);
+
+  return (
+    <CanvasRoot>
+      <View style={view1}>
+        {color === 'tomato' ? (
+          <>
+            <View style={view3} />
+            <View style={{ flex: 1, backgroundColor: 'red' }} />
+          </>
+        ) : (
+          <>
+            <View style={{ flex: 1, backgroundColor: 'red' }} />
+            <View style={view3} />
+          </>
+        )}
+      </View>
+    </CanvasRoot>
+  );
 }
-
-export default App;
