@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useRef, memo } from 'react';
+import { useContext, useEffect, useRef, memo } from 'react';
 import CanvasContext from './Context';
-const { Provider } = CanvasContext;
 
-var ID = function() {
+var ID = function () {
   return (
     '_' +
     Math.random()

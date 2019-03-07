@@ -14,31 +14,11 @@ let view3 = {
 };
 
 export default function App() {
-  let [color, toggleColor] = useState('tomato');
-  useEffect(() => {
-    let int = setInterval(() => {
-      toggleColor(color => (color === 'tomato' ? 'purple' : 'tomato'));
-    }, 500);
-
-    return () => {
-      clearInterval(int);
-    };
-  }, []);
-
   return (
-    <CanvasRoot>
+    <CanvasRoot style={{ height: '100%', width: '100%' }}>
       <View style={view1}>
-        {color === 'tomato' ? (
-          <>
-            <View style={view3} />
-            <View style={{ flex: 1, backgroundColor: 'red' }} />
-          </>
-        ) : (
-          <>
-            <View style={{ flex: 1, backgroundColor: 'red' }} />
-            <View style={view3} />
-          </>
-        )}
+        <View style={view3} />
+        <View style={{ flex: 1, backgroundColor: 'red' }} />
       </View>
     </CanvasRoot>
   );
