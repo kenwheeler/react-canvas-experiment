@@ -49,7 +49,7 @@ export default memo(function Text(props) {
   useEffect(() => {
     propsCache.current = props;
     if (hasDrawn.current === true) {
-      context.redraw(context.parent, idRef.current);
+      context.redraw(context.parent, idRef.current, { style: props.style, children: props.children });
     }
   }, [props]);
 

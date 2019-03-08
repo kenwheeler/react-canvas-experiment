@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, memo } from 'react';
 import CanvasContext from './Context';
 const { Provider } = CanvasContext;
 
-var ID = function() {
+var ID = function () {
   return (
     '_' +
     Math.random()
@@ -52,9 +52,9 @@ export default memo(function View(props) {
   useEffect(() => {
     propsCache.current = props;
     if (hasDrawn.current === true) {
-      context.redraw(context.parent, idRef.current, props);
+      context.redraw(context.parent, idRef.current, { style: props.style });
     }
-  }, [props]);
+  }, [props.style, props.children]);
 
   return <Provider value={childContext}>{props.children || null}</Provider>;
 });

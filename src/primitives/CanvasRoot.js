@@ -1,12 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import yoga from 'yoga-layout';
 import useComponentSize from '@rehooks/component-size'
 
 import CanvasContext from './Context';
-import { addToTree, removeFromTree } from './tree-utils';
-import { initializeLayout } from './layout-utils';
-import { drawChildTree, redrawSubtree } from './draw-utils';
+import { addToTree, removeFromTree, getChild, buildLayoutTree } from './tree-utils';
+
 import layoutWorker from './layout.worker';
+import drawWorker from './draw.worker';
 
 const { Provider } = CanvasContext;
 
@@ -14,18 +13,19 @@ export default function CanvasRoot(props) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const treeRef = useRef({ children: {}, props: null });
-  const workerRef = useRef(null);
+  const layoutTreeRef = useRef({ children: {}, props: null });
+  const layoutWorkerRef = useRef(null);
+  const drawWorkerRef = useRef(null);
   let size = useComponentSize(containerRef)
 
   const redraw = (parent, id, props) => {
-    let target = treeRef.current;
-    const ctx = canvasRef.current.getContext('2d');
-    redrawSubtree({ ctx, target, parent, id, props });
+    let { width, height } = size;
+    let child = getChild({ layoutTree: layoutTreeRef.current, parent, id, props });
+    layoutWorkerRef.current.postMessage({ operation: 'updateLayout', args: { parent, id, child, width, height } })
   };
 
   const drawChildren = (children, offset = { x: 0, y: 0 }) => {
-    const ctx = canvasRef.current.getContext('2d');
-    drawChildTree({ ctx, children, offset });
+    drawWorkerRef.current.postMessage({ operation: 'drawChildTree', args: { children, offset } });
   };
 
   const registerNode = (parent, id, props, getProps, type) => {
@@ -38,34 +38,31 @@ export default function CanvasRoot(props) {
     removeFromTree({ targetPath, parent, id });
   };
 
-  // const handleMessage = (tree) => {
-  //   treeRef.current = tree;
-  // };
+  const handleMessage = (event) => {
+    layoutTreeRef.current = event.data;
+    drawChildren(layoutTreeRef.current.children);
+  };
 
   useEffect(() => {
     const { width, height } = size;
 
-    // workerRef.current = new layoutWorker();
-    // const tree = {...treeRef.current};
-    // workerRef.current.postMessage({operation: 'initializeLayout', tree, width: width, height: height });
-    // workerRef.current.addEventListener('message', this.handleMessage);
+    layoutTreeRef.current = buildLayoutTree({ tree: treeRef.current });
+    layoutWorkerRef.current = new layoutWorker();
 
-    initializeLayout({ tree: treeRef.current, width: width, height: height });
-    canvasRef.current.width = width;
-    canvasRef.current.height = height;
-    requestAnimationFrame(() => drawChildren(treeRef.current.children));
+    const tree = layoutTreeRef.current;
+    layoutWorkerRef.current.addEventListener('message', handleMessage);
+    layoutWorkerRef.current.postMessage({ operation: 'initializeLayout', args: { tree, width: width, height: height } });
 
-    // return () => {
-    //   workerRef.current.removeEventListener('message', this.handleMessage);
-    // }
+    const offscreen = canvasRef.current.transferControlToOffscreen();
+
+    drawWorkerRef.current = new drawWorker();
+    drawWorkerRef.current.postMessage({ operation: 'init', canvas: offscreen }, [offscreen]);
   }, []);
 
   useEffect(() => {
     const { width, height } = size;
-    canvasRef.current.width = width;
-    canvasRef.current.height = height;
-    treeRef.current.node.calculateLayout(width, height, yoga.DIRECTION_LTR);
-    requestAnimationFrame(() => drawChildren(treeRef.current.children));
+    drawWorkerRef.current.postMessage({ operation: 'resizeCanvas', args: { width, height } });
+    layoutWorkerRef.current.postMessage({ operation: 'recalcLayout', args: { width: width, height: height } });
   }, [size]);
 
   return (

@@ -38,18 +38,47 @@ export const removeFromTree = ({ targetPath, parent, id }) => {
   delete targetPath[id];
 }
 
+export const getChild = ({ layoutTree, parent, id, props }) => {
+  const paths = parent.split('|');
+  let targetPath = { ...layoutTree };
+
+  paths.forEach(path => {
+    if (path !== 'CanvasRoot') {
+      targetPath = targetPath.children[path];
+    }
+  });
+
+  const target = targetPath.children[id];
+  let { style, children } = props;
+  target.props.style = style;
+  if (target.type === 'Text') {
+    target.text = children && typeof children === 'string' ? children.toString() : null;
+  }
+  return target;
+}
+
 export const buildLayoutTree = ({ tree }) => {
   let layoutTree = {};
 
   function addChild(root, layoutRoot) {
     if (root.getProps) {
-      let { style } = root.getProps();
-      layoutRoot.style = style;
+      let { style, children } = root.getProps();
+      layoutRoot.props = {};
+      layoutRoot.props.style = style;
+      if (root.type === 'Text') {
+        layoutRoot.text = children && typeof children === 'string' ? children.toString() : null;
+      }
+    }
+    if (root.type) {
+      layoutRoot.type = root.type;
     }
     if (root.children) {
       Object.keys(root.children).forEach((key) => {
-        layoutRoot[key] = {};
-        addChild(root.children[key], layoutRoot[key]);
+        if (!layoutRoot.children) {
+          layoutRoot.children = [];
+        }
+        layoutRoot.children[key] = {};
+        addChild(root.children[key], layoutRoot.children[key]);
       })
     }
   }
