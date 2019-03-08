@@ -49,8 +49,12 @@ export const getChild = ({ layoutTree, parent, id, props }) => {
   });
 
   const target = targetPath.children[id];
+  if (!target) {
+    return null;
+  }
   let { style, children } = props;
-  target.props.style = style;
+
+  target.props.style = style || {};
   if (target.type === 'Text') {
     target.text = children && typeof children === 'string' ? children.toString() : null;
   }
@@ -64,7 +68,7 @@ export const buildLayoutTree = ({ tree }) => {
     if (root.getProps) {
       let { style, children } = root.getProps();
       layoutRoot.props = {};
-      layoutRoot.props.style = style;
+      layoutRoot.props.style = style || {};
       if (root.type === 'Text') {
         layoutRoot.text = children && typeof children === 'string' ? children.toString() : null;
       }

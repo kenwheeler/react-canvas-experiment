@@ -14,19 +14,29 @@ export default function CanvasRoot(props) {
   const canvasRef = useRef(null);
   const treeRef = useRef({ children: {}, props: null });
   const layoutTreeRef = useRef({ children: {}, props: null });
+  const bufferRef = useRef([]);
   const layoutWorkerRef = useRef(null);
   const drawWorkerRef = useRef(null);
+  const sizeRef = useRef(null);
   let size = useComponentSize(containerRef)
 
   const redraw = (parent, id, props) => {
-    let { width, height } = size;
+    let arr = bufferRef.current;
     let child = getChild({ layoutTree: layoutTreeRef.current, parent, id, props });
-    layoutWorkerRef.current.postMessage({ operation: 'updateLayout', args: { parent, id, child, width, height } })
+    if (child) {
+      arr.push({ parent, id, child });
+      bufferRef.current = arr;
+    }
   };
 
-  const drawChildren = (children, offset = { x: 0, y: 0 }) => {
-    drawWorkerRef.current.postMessage({ operation: 'drawChildTree', args: { children, offset } });
-  };
+  const handleBuffer = () => {
+    let { width, height } = sizeRef.current;
+    if (bufferRef.current.length > 0) {
+      layoutWorkerRef.current.postMessage({ operation: 'updateLayout', args: { buffer: bufferRef.current, width, height } })
+      bufferRef.current = [];
+    }
+    requestAnimationFrame(handleBuffer);
+  }
 
   const registerNode = (parent, id, props, getProps, type) => {
     const tree = treeRef.current;
@@ -40,7 +50,7 @@ export default function CanvasRoot(props) {
 
   const handleMessage = (event) => {
     layoutTreeRef.current = event.data;
-    drawChildren(layoutTreeRef.current.children);
+    drawWorkerRef.current.postMessage({ operation: 'updateTree', args: { tree: layoutTreeRef.current } });
   };
 
   useEffect(() => {
@@ -57,12 +67,15 @@ export default function CanvasRoot(props) {
 
     drawWorkerRef.current = new drawWorker();
     drawWorkerRef.current.postMessage({ operation: 'init', canvas: offscreen }, [offscreen]);
+
+    requestAnimationFrame(handleBuffer);
   }, []);
 
   useEffect(() => {
     const { width, height } = size;
     drawWorkerRef.current.postMessage({ operation: 'resizeCanvas', args: { width, height } });
     layoutWorkerRef.current.postMessage({ operation: 'recalcLayout', args: { width: width, height: height } });
+    sizeRef.current = size;
   }, [size]);
 
   return (
