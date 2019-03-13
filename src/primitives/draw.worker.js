@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals */
+
 import { drawChildTree } from './draw-utils';
 
 let canvas;

@@ -30,10 +30,13 @@ export const removeFromTree = ({ targetPath, parent, id }) => {
       targetPath = targetPath.children[path];
     }
   });
-  const yogaNode = targetPath[id].node;
-  const nodeParent = targetPath[id].node.getParent();
-  nodeParent.removeChild(yogaNode);
-  delete targetPath[id];
+
+  if (targetPath[id]) {
+    const yogaNode = targetPath[id].node;
+    const nodeParent = targetPath[id].node.getParent();
+    nodeParent.removeChild(yogaNode);
+    delete targetPath[id];
+  }
 };
 
 export const getChild = ({ layoutTree, parent, id, props }) => {

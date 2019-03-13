@@ -30,6 +30,9 @@ export default function CanvasRoot(props) {
     onMouseEnter: {},
     onMouseMove: {},
     onMouseLeave: {},
+    onMouseDown: {},
+    onMouseUp: {},
+    onResize: {},
     onWheel: {},
   });
   const rBushRef = useRef(rbush());
@@ -37,53 +40,88 @@ export default function CanvasRoot(props) {
   let size = useComponentSize(containerRef);
 
   const dispatchEvent = (event, type) => {
-    let { x, y } = event.nativeEvent;
-    let matches = rBushRef.current.search({
-      minX: x,
-      minY: y,
-      maxX: x,
-      maxY: y,
-    });
+    if (type === 'onResize') {
+      let resizers = eventMapRef.current['onResize'];
 
-    if (matches.length > 0) {
-      matches = matches.sort((a, b) => {
-        return a.depth > b.depth ? -1 : 1;
+      Object.keys(resizers).forEach(r => {
+        eventMapRef.current['onResize'][r](size);
+      });
+    } else {
+      event.persist();
+      event.preventDefault();
+      let { x, y } = event.nativeEvent;
+      let matches = rBushRef.current.search({
+        minX: x,
+        minY: y,
+        maxX: x,
+        maxY: y,
       });
 
-      if (type === 'onMouseMove') {
-        let hoverCache = hoverCacheRef.current;
-
-        let leaves = [];
-        hoverCache.forEach((c, index) => {
-          let target = matches.some(m => m.id === c);
-          if (!target) {
-            leaves.push({ index, id: c });
-          }
+      if (matches.length > 0) {
+        matches = matches.sort((a, b) => {
+          return a.depth > b.depth ? -1 : 1;
         });
 
-        leaves.forEach(l => {
-          hoverCache.splice(l.index);
-          if (eventMapRef.current['onMouseLeave'][l.id]) {
-            eventMapRef.current['onMouseLeave'][l.id]();
-          }
-        });
+        if (type === 'onMouseMove') {
+          let hoverCache = hoverCacheRef.current;
 
-        matches.forEach(match => {
-          if (!hoverCache.includes(match.id)) {
-            hoverCache.push(match.id);
-            if (eventMapRef.current['onMouseEnter'][match.id]) {
-              eventMapRef.current['onMouseEnter'][match.id]();
+          let leaves = [];
+          hoverCache.forEach((c, index) => {
+            let target = matches.some(m => m.id === c);
+            if (!target) {
+              leaves.push({ index, id: c });
             }
+          });
+
+          leaves.forEach(l => {
+            hoverCache.splice(l.index);
+            if (eventMapRef.current['onMouseLeave'][l.id]) {
+              eventMapRef.current['onMouseLeave'][l.id](event);
+            }
+          });
+
+          matches.forEach(match => {
+            if (!hoverCache.includes(match.id)) {
+              hoverCache.push(match.id);
+              if (eventMapRef.current['onMouseEnter'][match.id]) {
+                eventMapRef.current['onMouseEnter'][match.id](event);
+              }
+            }
+          });
+        }
+
+        matches.forEach(m => {
+          if (eventMapRef.current[type][m.id]) {
+            eventMapRef.current[type][m.id](event);
           }
         });
       }
+    }
+  };
 
-      matches.forEach(m => {
-        if (eventMapRef.current[type][m.id]) {
-          eventMapRef.current[type][m.id]();
+  const getDimensions = (parent, id) => {
+    let layout = layoutTreeRef.current;
+    if (Object.keys(layout.children).length > 0) {
+      const paths = parent.split('|');
+      let targetPath = { ...layout };
+
+      paths.forEach(path => {
+        if (path !== 'CanvasRoot') {
+          targetPath = targetPath.children[path];
         }
       });
+
+      if (targetPath) {
+        const target = targetPath.children[id];
+        return {
+          x: target.x,
+          y: target.y,
+          height: target.height,
+          width: target.width,
+        };
+      }
     }
+    return null;
   };
 
   const updateRBush = () => {
@@ -163,10 +201,10 @@ export default function CanvasRoot(props) {
     addEvent(id, props);
   };
 
-  const unregisterNode = (parent, id) => {
+  const unregisterNode = (parent, id, props) => {
     let targetPath = treeRef.current;
     removeFromTree({ targetPath, parent, id });
-    removeEvent(id);
+    removeEvent(id, props);
   };
 
   const handleMessage = event => {
@@ -213,6 +251,7 @@ export default function CanvasRoot(props) {
       args: { width: width, height: height },
     });
     sizeRef.current = size;
+    dispatchEvent(size, 'onResize');
   }, [size]);
 
   return (
@@ -222,6 +261,7 @@ export default function CanvasRoot(props) {
         registerNode: registerNode,
         redraw: redraw,
         unregisterNode: unregisterNode,
+        getDimensions: getDimensions,
       }}
     >
       <div ref={containerRef} {...props}>
@@ -235,6 +275,12 @@ export default function CanvasRoot(props) {
           }}
           onMouseMove={e => {
             dispatchEvent(e, 'onMouseMove');
+          }}
+          onMouseDown={e => {
+            dispatchEvent(e, 'onMouseDown');
+          }}
+          onMouseUp={e => {
+            dispatchEvent(e, 'onMouseUp');
           }}
           onWheel={e => {
             dispatchEvent(e, 'onWheel');

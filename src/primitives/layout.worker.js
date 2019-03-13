@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 // import { addToTree, removeFromTree } from './tree-utils';
 import { initializeLayout, recalcLayout, updateLayout } from './layout-utils';
 
