@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CanvasRoot, View, Text } from './primitives';
 import { Spring } from 'react-spring/renderprops';
 
@@ -37,6 +37,21 @@ let text = {
   color: 'white',
 };
 
+function Hoverable(props) {
+  let [hovered, setHovered] = useState(false);
+  return (
+    <View
+      style={{ flex: 1, backgroundColor: hovered ? 'plum' : 'orange' }}
+      onMouseEnter={() => {
+        setHovered(true);
+      }}
+      onMouseLeave={() => {
+        setHovered(false);
+      }}
+    />
+  );
+}
+
 export default function App() {
   let [toggled, setToggled] = useState(false);
 
@@ -45,7 +60,7 @@ export default function App() {
   };
 
   return (
-    <CanvasRoot style={{ height: '100%', width: '100%' }} onClick={handleClick}>
+    <CanvasRoot style={{ height: '100%', width: '100%' }}>
       <View style={view1}>
         <View style={view2}>
           <Spring
@@ -53,7 +68,10 @@ export default function App() {
             to={{ width: toggled ? 400 : 200 }}
           >
             {props => (
-              <View style={{ ...view3, width: props.width }}>
+              <View
+                style={{ ...view3, width: props.width }}
+                onClick={handleClick}
+              >
                 <Text style={text}>
                   The quick brown fox jumped over the log. The quick brown fox
                   jumped over the log.
@@ -62,7 +80,7 @@ export default function App() {
             )}
           </Spring>
         </View>
-        <View style={{ flex: 1, backgroundColor: 'plum' }} />
+        <Hoverable />
       </View>
     </CanvasRoot>
   );

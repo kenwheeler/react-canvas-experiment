@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import useComponentSize from '@rehooks/component-size';
+import rbush from 'rbush';
 
 import CanvasContext from './Context';
 import {
@@ -7,13 +8,10 @@ import {
   removeFromTree,
   getChild,
   buildLayoutTree,
-  addEvent,
-  removeEvent,
 } from './tree-utils';
 
 import layoutWorker from './layout.worker';
 import drawWorker from './draw.worker';
-import { find } from 'nbind';
 
 const { Provider } = CanvasContext;
 
@@ -26,19 +24,95 @@ export default function CanvasRoot(props) {
   const layoutWorkerRef = useRef(null);
   const drawWorkerRef = useRef(null);
   const sizeRef = useRef(null);
+  const hoverCacheRef = useRef([]);
   const eventMapRef = useRef({
     onClick: {},
     onMouseEnter: {},
     onMouseMove: {},
     onMouseLeave: {},
-    onMouseWheel: {},
+    onWheel: {},
   });
+  const rBushRef = useRef(rbush());
 
   let size = useComponentSize(containerRef);
 
   const dispatchEvent = (event, type) => {
-    console.log(layoutTreeRef.current);
-    console.log(event.region, type);
+    let { x, y } = event.nativeEvent;
+    let matches = rBushRef.current.search({
+      minX: x,
+      minY: y,
+      maxX: x,
+      maxY: y,
+    });
+
+    if (matches.length > 0) {
+      matches = matches.sort((a, b) => {
+        return a.depth > b.depth ? -1 : 1;
+      });
+
+      if (type === 'onMouseMove') {
+        let hoverCache = hoverCacheRef.current;
+
+        let leaves = [];
+        hoverCache.forEach((c, index) => {
+          let target = matches.some(m => m.id === c);
+          if (!target) {
+            leaves.push({ index, id: c });
+          }
+        });
+
+        leaves.forEach(l => {
+          hoverCache.splice(l.index);
+          if (eventMapRef.current['onMouseLeave'][l.id]) {
+            eventMapRef.current['onMouseLeave'][l.id]();
+          }
+        });
+
+        matches.forEach(match => {
+          if (!hoverCache.includes(match.id)) {
+            hoverCache.push(match.id);
+            if (eventMapRef.current['onMouseEnter'][match.id]) {
+              eventMapRef.current['onMouseEnter'][match.id]();
+            }
+          }
+        });
+      }
+
+      matches.forEach(m => {
+        if (eventMapRef.current[type][m.id]) {
+          eventMapRef.current[type][m.id]();
+        }
+      });
+    }
+  };
+
+  const updateRBush = () => {
+    let tree = rBushRef.current;
+    let layout = layoutTreeRef.current;
+    tree.clear();
+
+    let items = [];
+
+    function addChildren(children) {
+      Object.keys(children).forEach(child => {
+        let { x, y, width, height, depth } = children[child];
+        items.push({
+          minX: x,
+          minY: y,
+          maxX: x + width,
+          maxY: y + height,
+          id: child,
+          depth,
+        });
+        if (children[child].children) {
+          addChildren(children[child].children);
+        }
+      });
+    }
+
+    addChildren(layout.children);
+
+    tree.load(items);
   };
 
   const redraw = (parent, id, props) => {
@@ -67,22 +141,37 @@ export default function CanvasRoot(props) {
     requestAnimationFrame(handleBuffer);
   };
 
+  const addEvent = (id, props) => {
+    Object.keys(props).forEach(p => {
+      if (p in eventMapRef.current) {
+        eventMapRef.current[p][id] = props[p];
+      }
+    });
+  };
+
+  const removeEvent = (id, props) => {
+    Object.keys(props).forEach(p => {
+      if (p in eventMapRef.current) {
+        delete eventMapRef.current[p][id];
+      }
+    });
+  };
+
   const registerNode = (parent, id, props, getProps, type) => {
     const tree = treeRef.current;
     addToTree({ tree, parent, id, props, getProps, type });
-    const eventMap = eventMapRef.current;
-    addEvent(eventMap, id, props);
+    addEvent(id, props);
   };
 
   const unregisterNode = (parent, id) => {
     let targetPath = treeRef.current;
     removeFromTree({ targetPath, parent, id });
-    const eventMap = eventMapRef.current;
-    removeEvent(eventMap, id, props);
+    removeEvent(id);
   };
 
   const handleMessage = event => {
     layoutTreeRef.current = event.data;
+    updateRBush();
     drawWorkerRef.current.postMessage({
       operation: 'updateTree',
       args: { tree: layoutTreeRef.current },
@@ -143,6 +232,12 @@ export default function CanvasRoot(props) {
           style={{ display: 'block', height: size.height, width: size.width }}
           onClick={e => {
             dispatchEvent(e, 'onClick');
+          }}
+          onMouseMove={e => {
+            dispatchEvent(e, 'onMouseMove');
+          }}
+          onWheel={e => {
+            dispatchEvent(e, 'onWheel');
           }}
         >
           {props.children || null}

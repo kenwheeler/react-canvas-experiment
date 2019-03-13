@@ -71,8 +71,18 @@ export const recalcLayout = (layoutTree, yogaTree, { width, height }) => {
   yogaTree.node.calculateLayout(width, height, yoga.DIRECTION_LTR);
   updateTextLayout(layoutTree, yogaTree, width, height);
   yogaTree.node.calculateLayout(width, height, yoga.DIRECTION_LTR);
-  layoutTree.computed = yogaTree.node.getComputedLayout();
-  computeChildren(layoutTree, yogaTree);
+  const {
+    left,
+    top,
+    width: cwidth,
+    height: cheight,
+  } = yogaTree.node.getComputedLayout();
+  layoutTree.x = left;
+  layoutTree.y = top;
+  layoutTree.width = cwidth;
+  layoutTree.height = cheight;
+  layoutTree.depth = 1;
+  computeChildren(layoutTree, yogaTree, { x: left, y: top, z: 1 });
   return { yogaTree, layoutTree };
 };
 
@@ -142,19 +152,42 @@ export const initializeLayout = (
   }
 
   yogaTree.node.calculateLayout(width, height, yoga.DIRECTION_LTR);
-  layoutTree.computed = yogaTree.node.getComputedLayout();
-  computeChildren(layoutTree, yogaTree);
+  const {
+    left,
+    top,
+    width: cwidth,
+    height: cheight,
+  } = yogaTree.node.getComputedLayout();
+  layoutTree.x = left;
+  layoutTree.y = top;
+  layoutTree.width = cwidth;
+  layoutTree.height = cheight;
+  layoutTree.depth = 1;
+  computeChildren(layoutTree, yogaTree, { x: left, y: top, z: 1 });
   return { yogaTree, layoutTree };
 };
 
-const computeChildren = (layoutRoot, yogaRoot) => {
+const computeChildren = (
+  layoutRoot,
+  yogaRoot,
+  offset = { x: 0, y: 0, z: 1 }
+) => {
   layoutRoot.children = layoutRoot.children || {};
   Object.keys(yogaRoot.children).forEach(key => {
     const layoutChild = layoutRoot.children[key];
     let child = yogaRoot.children[key];
-    layoutChild.computed = child.node.getComputedLayout();
+    const { left, top, width, height } = child.node.getComputedLayout();
+    layoutChild.x = offset.x + left;
+    layoutChild.y = offset.y + top;
+    layoutChild.width = width;
+    layoutChild.height = height;
+    layoutChild.depth = offset.z + 1;
     if (child.children) {
-      computeChildren(layoutChild, child);
+      computeChildren(layoutChild, child, {
+        x: layoutChild.x,
+        y: layoutChild.y,
+        z: offset.z + 1,
+      });
     }
   });
 };

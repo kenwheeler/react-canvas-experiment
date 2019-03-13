@@ -91,19 +91,3 @@ export const buildLayoutTree = ({ tree }) => {
 
   return layoutTree;
 };
-
-export const addEvent = (eventMap, id, props) => {
-  Object.keys(props).forEach(p => {
-    if (p in eventMap) {
-      eventMap[p][id] = props[p];
-    }
-  });
-};
-
-export const removeEvent = (eventMap, id, props) => {
-  Object.keys(props).forEach(p => {
-    if (p in eventMap) {
-      delete eventMap[p][id];
-    }
-  });
-};
