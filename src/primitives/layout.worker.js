@@ -4,7 +4,7 @@ import { initializeLayout, recalcLayout, updateLayout } from './layout-utils';
 let layoutTree = {};
 let yogaTree = {};
 
-self.addEventListener("message", handleMessage);
+self.addEventListener('message', handleMessage);
 
 function handleMessage(event) {
   const { operation, args } = event.data;

@@ -1,11 +1,10 @@
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
-
+export function wrapText(context, text, x, y, maxWidth, lineHeight) {
   var words = text.split(' '),
     line = '',
-    lineCount = 0,
     i,
     test,
-    metrics;
+    metrics,
+    lines = [];
 
   for (i = 0; i < words.length; i++) {
     test = words[i];
@@ -16,7 +15,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
       metrics = context.measureText(test);
     }
     if (words[i] != test) {
-      words.splice(i + 1, 0, words[i].substr(test.length))
+      words.splice(i + 1, 0, words[i].substr(test.length));
       words[i] = test;
     }
 
@@ -24,15 +23,14 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     metrics = context.measureText(test);
 
     if (metrics.width > maxWidth && i > 0) {
-      context.fillText(line, x, y);
+      lines.push({ text: line, y });
       line = words[i] + ' ';
       y += lineHeight;
-      lineCount++;
-    }
-    else {
+    } else {
       line = test;
     }
   }
 
-  context.fillText(line, x, y);
+  lines.push({ text: line, y });
+  return lines;
 }

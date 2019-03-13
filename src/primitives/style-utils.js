@@ -1,20 +1,23 @@
 import yoga from 'yoga-layout';
 
 export const alignMap = {
-  'center': yoga.ALIGN_CENTER,
+  center: yoga.ALIGN_CENTER,
   'flex-start': yoga.ALIGN_FLEX_START,
   'flex-end': yoga.ALIGN_FLEX_END,
-  'stretch': yoga.ALIGN_STRETCH,
+  stretch: yoga.ALIGN_STRETCH,
   'space-between': yoga.ALIGN_SPACE_BETWEEN,
   'space-around': yoga.ALIGN_SPACE_AROUND,
-  'baseline': yoga.ALIGN_BASELINE,
-  'auto': yoga.ALIGN_AUTO
+  baseline: yoga.ALIGN_BASELINE,
+  auto: yoga.ALIGN_AUTO,
 };
 
 export const justifyMap = {
   center: yoga.JUSTIFY_CENTER,
   'flex-start': yoga.JUSTIFY_FLEX_START,
   'flex-end': yoga.JUSTIFY_FLEX_END,
+  'space-between': yoga.JUSTIFY_SPACE_BETWEEN,
+  'space-around': yoga.JUSTIFY_SPACE_AROUND,
+  'space-evenly': yoga.JUSTIFY_SPACE_EVENLY,
 };
 
 export const directionMap = {
@@ -27,19 +30,19 @@ export const directionMap = {
 export const wrapMap = {
   wrap: yoga.WRAP_WRAP,
   nowrap: yoga.WRAP_NO_WRAP,
-  'wrap-reverse': yoga.WRAP_WRAP_REVERSE
-}
+  'wrap-reverse': yoga.WRAP_WRAP_REVERSE,
+};
 
 export const overflowMap = {
   hidden: yoga.OVERFLOW_HIDDEN,
   scroll: yoga.OVERFLOW_SCROLL,
-  visible: yoga.OVERFLOW_VISIBLE
-}
+  visible: yoga.OVERFLOW_VISIBLE,
+};
 
 export const positionMap = {
   absolute: yoga.POSITION_TYPE_ABSOLUTE,
-  relative: yoga.POSITION_TYPE_RELATIVE
-}
+  relative: yoga.POSITION_TYPE_RELATIVE,
+};
 
 export const edgeMap = {
   left: yoga.EDGE_LEFT,
@@ -50,13 +53,13 @@ export const edgeMap = {
   end: yoga.EDGE_END,
   horizontal: yoga.EDGE_HORIZONTAL,
   vertical: yoga.EDGE_VERTICAL,
-  all: yoga.EDGE_ALL
-}
+  all: yoga.EDGE_ALL,
+};
 
 export const displayMap = {
   flex: yoga.DISPLAY_FLEX,
-  none: yoga.DISPLAY_NONE
-}
+  none: yoga.DISPLAY_NONE,
+};
 
 export function applyStyles(node, styles) {
   Object.keys(styles).forEach(style => {
@@ -110,16 +113,16 @@ export function applyStyles(node, styles) {
         node.setFlexWrap(wrapMap[styles[style]]);
         break;
       case 'flexGrow':
-        node.setFlexGrow(wrapMap[styles[style]]);
+        node.setFlexGrow(styles[style]);
         break;
       case 'flexShrink':
-        node.setFlexShrink(wrapMap[styles[style]]);
+        node.setFlexShrink(styles[style]);
         break;
       case 'flexBasis':
-        node.setFlexBasis(wrapMap[styles[style]]);
+        node.setFlexBasis(styles[style]);
         break;
       case 'flexBasisPct':
-        node.setFlexBasisPercent(wrapMap[styles[style]]);
+        node.setFlexBasisPercent(styles[style]);
         break;
       case 'borderWidth':
         node.setBorder(edgeMap.all, styles[style]);

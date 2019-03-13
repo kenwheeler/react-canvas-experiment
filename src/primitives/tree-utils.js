@@ -15,14 +15,12 @@ export const addToTree = ({ tree, parent, id, props, getProps, type }) => {
     }
   });
   currentPath.children[id] = {
-    children: currentPath.children[id]
-      ? currentPath.children[id].children
-      : {},
+    children: currentPath.children[id] ? currentPath.children[id].children : {},
     props: props,
     type: type,
     getProps: getProps,
   };
-}
+};
 
 export const removeFromTree = ({ targetPath, parent, id }) => {
   const paths = parent.split('|');
@@ -36,7 +34,7 @@ export const removeFromTree = ({ targetPath, parent, id }) => {
   const nodeParent = targetPath[id].node.getParent();
   nodeParent.removeChild(yogaNode);
   delete targetPath[id];
-}
+};
 
 export const getChild = ({ layoutTree, parent, id, props }) => {
   const paths = parent.split('|');
@@ -56,10 +54,11 @@ export const getChild = ({ layoutTree, parent, id, props }) => {
 
   target.props.style = style || {};
   if (target.type === 'Text') {
-    target.text = children && typeof children === 'string' ? children.toString() : null;
+    target.text =
+      children && typeof children === 'string' ? children.toString() : null;
   }
   return target;
-}
+};
 
 export const buildLayoutTree = ({ tree }) => {
   let layoutTree = {};
@@ -70,24 +69,41 @@ export const buildLayoutTree = ({ tree }) => {
       layoutRoot.props = {};
       layoutRoot.props.style = style || {};
       if (root.type === 'Text') {
-        layoutRoot.text = children && typeof children === 'string' ? children.toString() : null;
+        layoutRoot.text =
+          children && typeof children === 'string' ? children.toString() : null;
       }
     }
     if (root.type) {
       layoutRoot.type = root.type;
     }
     if (root.children) {
-      Object.keys(root.children).forEach((key) => {
+      Object.keys(root.children).forEach(key => {
         if (!layoutRoot.children) {
           layoutRoot.children = [];
         }
         layoutRoot.children[key] = {};
         addChild(root.children[key], layoutRoot.children[key]);
-      })
+      });
     }
   }
 
   addChild(tree, layoutTree);
 
   return layoutTree;
-}
+};
+
+export const addEvent = (eventMap, id, props) => {
+  Object.keys(props).forEach(p => {
+    if (p in eventMap) {
+      eventMap[p][id] = props[p];
+    }
+  });
+};
+
+export const removeEvent = (eventMap, id, props) => {
+  Object.keys(props).forEach(p => {
+    if (p in eventMap) {
+      delete eventMap[p][id];
+    }
+  });
+};

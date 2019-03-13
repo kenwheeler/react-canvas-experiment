@@ -1,14 +1,21 @@
-import { drawChildTree, redrawSubtree } from './draw-utils';
+import { drawChildTree } from './draw-utils';
 
 let canvas;
 let ctx;
 let tree;
+let sizeBuffer = null;
 
-self.addEventListener("message", handleMessage);
+self.addEventListener('message', handleMessage);
 
 function drawLoop() {
   if (ctx && tree) {
-    drawChildTree({ ctx, children: tree.children })
+    if (sizeBuffer) {
+      canvas.width = sizeBuffer.width * sizeBuffer.dpr;
+      canvas.height = sizeBuffer.height * sizeBuffer.dpr;
+      ctx.scale(sizeBuffer.dpr, sizeBuffer.dpr);
+      sizeBuffer = null;
+    }
+    drawChildTree({ ctx, children: tree.children });
   }
   requestAnimationFrame(drawLoop);
 }
@@ -18,20 +25,21 @@ function handleMessage(event) {
 
   if (operation === 'init') {
     canvas = event.data.canvas;
-    ctx = canvas.getContext('2d');
+    ctx = canvas.getContext('2d', {
+      alpha: false,
+    });
   }
 
   if (operation === 'updateTree') {
     if (!tree) {
       tree = args.tree;
-      drawLoop()
+      drawLoop();
     } else {
       tree = args.tree;
     }
   }
 
   if (operation === 'resizeCanvas') {
-    canvas.width = args.width;
-    canvas.height = args.height;
+    sizeBuffer = args;
   }
 }

@@ -5,7 +5,9 @@
   "dependencies": {
     "@rehooks/component-size": "^1.0.2",
     "@rehooks/window-size": "^1.0.2",
+    "lodash.throttle": "^4.1.1",
     "pixi.js": "^4.8.5",
+    "rbush": "^2.0.2",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
     "react-motion": "^0.5.2",

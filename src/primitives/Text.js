@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, memo } from 'react';
 import CanvasContext from './Context';
 
-var ID = function () {
+var ID = function() {
   return (
     '_' +
     Math.random()
@@ -49,7 +49,10 @@ export default memo(function Text(props) {
   useEffect(() => {
     propsCache.current = props;
     if (hasDrawn.current === true) {
-      context.redraw(context.parent, idRef.current, { style: props.style || {}, children: props.children || '' });
+      context.redraw(context.parent, idRef.current, {
+        style: props.style || {},
+        children: props.children || '',
+      });
     }
   }, [props.style, props.children]);
 
