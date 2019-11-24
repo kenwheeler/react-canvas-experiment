@@ -1,21 +1,33 @@
-self.addEventListener("message", handleMessage);
+/* eslint-disable no-restricted-globals */
+// import { addToTree, removeFromTree } from './tree-utils';
+import { initializeLayout, recalcLayout, updateLayout } from './layout-utils';
 
-import { addToTree, removeFromTree } from './tree-utils';
-import { initializeLayout } from './layout-utils';
+let layoutTree = {};
+let yogaTree = {};
 
-const operationMap = {
-  addToTree,
-  removeFromTree,
-  initializeLayout
-}
-
-let layoutTree = {}
+self.addEventListener('message', handleMessage);
 
 function handleMessage(event) {
   const { operation, args } = event.data;
 
   if (operation === 'initializeLayout') {
-    layoutTree = initializeLayout(layoutTree, args);
+    let layout = initializeLayout(layoutTree, yogaTree, args);
+    layoutTree = layout.layoutTree;
+    yogaTree = layout.yogaTree;
+    self.postMessage(layoutTree);
+  }
+
+  if (operation === 'recalcLayout') {
+    let layout = recalcLayout(layoutTree, yogaTree, args);
+    layoutTree = layout.layoutTree;
+    yogaTree = layout.yogaTree;
+    self.postMessage(layoutTree);
+  }
+
+  if (operation === 'updateLayout') {
+    let layout = updateLayout(layoutTree, yogaTree, args);
+    layoutTree = layout.layoutTree;
+    yogaTree = layout.yogaTree;
     self.postMessage(layoutTree);
   }
 }

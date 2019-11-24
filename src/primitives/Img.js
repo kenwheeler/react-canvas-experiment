@@ -18,7 +18,7 @@ var ID = function() {
 };
 
 export default memo(
-  forwardRef(function Text(props, ref) {
+  forwardRef(function Img(props, ref) {
     const hasDrawn = useRef(false);
     const idRef = useRef(ID());
     const propsCache = useRef(props);
@@ -28,10 +28,6 @@ export default memo(
       throw new Error(
         'CanvasRoot not found! View primitives are required to be inside of a CanvasRoot.'
       );
-    }
-
-    if (typeof props.children !== 'string') {
-      throw new Error('Text primitives require string based children');
     }
 
     const getDims = () => {
@@ -52,7 +48,7 @@ export default memo(
         idRef.current,
         props,
         getProps,
-        'Text'
+        'Image'
       );
       setTimeout(() => {
         hasDrawn.current = true;
