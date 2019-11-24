@@ -1,13 +1,12 @@
-import React, {
+import {
   useContext,
   useEffect,
   useRef,
-  forwardRef,
   useImperativeHandle,
+  forwardRef,
   memo,
 } from 'react';
 import CanvasContext from './Context';
-const { Provider } = CanvasContext;
 
 var ID = function() {
   return (
@@ -19,33 +18,25 @@ var ID = function() {
 };
 
 export default memo(
-  forwardRef(function View(props, ref) {
+  forwardRef(function Img(props, ref) {
     const hasDrawn = useRef(false);
     const idRef = useRef(ID());
     const propsCache = useRef(props);
     const context = useContext(CanvasContext);
-    const childContext = {
-      parent: context.parent + '|' + idRef.current,
-      registerNode: context.registerNode,
-      getDimensions: context.getDimensions,
-      redraw: context.redraw,
-      unregisterNode: context.unregisterNode,
-    };
-
-    const getDims = () => {
-      // Use array of numbers for parent path
-      return context.getDimensions(context.parent, idRef.current);
-    };
-
-    useImperativeHandle(ref, () => ({
-      getDimensions: getDims,
-    }));
 
     if (!context) {
       throw new Error(
         'CanvasRoot not found! View primitives are required to be inside of a CanvasRoot.'
       );
     }
+
+    const getDims = () => {
+      return context.getDimensions(context.parent, idRef.current);
+    };
+
+    useImperativeHandle(ref, () => ({
+      getDimensions: getDims,
+    }));
 
     const getProps = () => {
       return propsCache.current;
@@ -57,7 +48,7 @@ export default memo(
         idRef.current,
         props,
         getProps,
-        'View'
+        'Image'
       );
       setTimeout(() => {
         hasDrawn.current = true;
@@ -70,10 +61,13 @@ export default memo(
     useEffect(() => {
       propsCache.current = props;
       if (hasDrawn.current === true) {
-        context.redraw(context.parent, idRef.current, { style: props.style });
+        context.redraw(context.parent, idRef.current, {
+          style: props.style || {},
+          children: props.children || '',
+        });
       }
     }, [props.style, props.children]);
 
-    return <Provider value={childContext}>{props.children || null}</Provider>;
+    return null;
   })
 );

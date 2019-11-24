@@ -94,9 +94,9 @@ export const drawChild = ({ ctx, child }) => {
       ctx.restore();
     }
   } else if (child.type === 'Text') {
-    const { fontFamily, fontSize, fontStyle, color } = props.style;
-    ctx.font = `${fontStyle || 'normal'} ${fontSize || 14}px ${fontFamily ||
-      'Arial'}`;
+    const { fontFamily, fontSize, fontWeight, color } = props.style;
+    ctx.font = `normal ${fontWeight || 'normal'} ${fontSize ||
+      14}px ${fontFamily || 'Arial'}`;
     ctx.fillStyle = color || 'black';
     ctx.textBaseline = 'top';
     ctx.direction = 'ltr';

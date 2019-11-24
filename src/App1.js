@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CanvasRoot, View, Text } from './primitives';
+import { CanvasRoot, View, Text, Img } from './primitives';
 import { Spring } from 'react-spring/renderprops';
 
 let view1 = {
@@ -40,10 +40,6 @@ let text = {
 function Hoverable(props) {
   let viewRef = useRef();
   let [hovered, setHovered] = useState(false);
-
-  useEffect(() => {
-    console.log(viewRef.current.getDimensions());
-  });
 
   return (
     <View

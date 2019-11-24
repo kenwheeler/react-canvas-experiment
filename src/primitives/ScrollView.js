@@ -139,7 +139,7 @@ export default memo(
           {props.children}
         </View>
 
-        <View style={styles.scrollbar}>
+        {/* <View style={styles.scrollbar}>
           <View
             style={{
               ...styles.puck,
@@ -149,7 +149,7 @@ export default memo(
             }}
             onMouseDown={handleMouseDown}
           />
-        </View>
+        </View> */}
       </View>
     );
   })
